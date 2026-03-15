@@ -1,0 +1,15 @@
+{
+  "name": "skais2-board-game",
+  "version": "3.0.0",
+  "description": "SKAIS2: The Board Game — digital engine",
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:features",
+    "test:unit": "node test/unit/run.js",
+    "test:features": "npx cucumber-js --import test/steps/*.js",
+    "play": "node src/cli.js"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^10.0.0"
+  }
+}

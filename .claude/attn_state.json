@@ -1,0 +1,25 @@
+{
+  "scores": {
+    "systems/legion.md": 0.0,
+    "systems/asus.md": 0.0,
+    "systems/orin.md": 0.0,
+    "systems/pi5.md": 0.0,
+    "systems/network.md": 0.35,
+    "modules/pipeline.md": 0.0,
+    "modules/intelligence.md": 0.0,
+    "modules/gto-adapters.md": 0.0,
+    "modules/es-ac.md": 0.0,
+    "modules/t3-telos.md": 0.0,
+    "modules/t3-telos/trajectories/convergent.md": 0.0,
+    "modules/t3-telos/trajectories/divergent.md": 0.0,
+    "modules/t3-telos/trajectories/oscillatory.md": 0.0,
+    "modules/t3-telos/primitives.md": 0.0,
+    "modules/cvmp-transformer.md": 0.0,
+    "modules/anticipatory-coherence.md": 0.0,
+    "modules/ppe-anticipatory-coherence.md": 0.0,
+    "integrations/pipe-to-orin.md": 0.0,
+    "integrations/img-to-asus.md": 0.0
+  },
+  "turn_count": 1,
+  "last_update": "2026-03-15T17:39:33.549773"
+}

@@ -1,0 +1,52 @@
+stages:
+  - build
+  - verify
+
+variables:
+  NODE_VERSION: "20"
+
+# ── Build ──
+
+install:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+
+# ── Verify ──
+
+unit-tests:
+  stage: verify
+  image: node:${NODE_VERSION}-alpine
+  needs: [install]
+  script:
+    - npm run test:unit
+  artifacts:
+    when: always
+    reports:
+      junit: test-results/unit.xml
+    expire_in: 7 days
+
+gherkin-tests:
+  stage: verify
+  image: node:${NODE_VERSION}-alpine
+  needs: [install]
+  script:
+    - npx cucumber-js --format json:test-results/cucumber.json --format summary
+    - node scripts/cucumber-to-junit.js
+  artifacts:
+    when: always
+    reports:
+      junit: test-results/gherkin.xml
+    expire_in: 7 days
+  allow_failure: true  # pending scenarios expected until reducer is done

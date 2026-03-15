@@ -1,0 +1,117 @@
+// ── Game Configuration ──
+// All v3 rules expressed as data. The engine reads this, never hardcodes rules.
+
+export const SKILLS = [
+  {
+    id: 'BE', name: 'Backend',
+    hasMisfortune: true, immunityLevel: 1, qaPassLevel: 2, maxLevel: 3,
+    effortModifiers: { 0: 1, 1: 0, 2: 0, 3: -1 },
+  },
+  {
+    id: 'DB', name: 'Database',
+    hasMisfortune: true, immunityLevel: 1, qaPassLevel: 2, maxLevel: 3,
+    effortModifiers: { 0: 1, 1: 0, 2: 0, 3: -1 },
+  },
+  {
+    id: 'DO', name: 'DevOps',
+    hasMisfortune: true, immunityLevel: 1, qaPassLevel: 2, maxLevel: 3,
+    effortModifiers: { 0: 1, 1: 0, 2: 0, 3: -1 },
+  },
+  {
+    id: 'FE', name: 'Frontend',
+    hasMisfortune: false, immunityLevel: null, qaPassLevel: 2, maxLevel: 3,
+    effortModifiers: { 0: 1, 1: 0, 2: 0, 3: -1 },
+  },
+];
+
+export const TASKS = [
+  { id: 'T01', name: 'Spring Boot 3 Upgrade', requiredSkills: ['BE'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T02', name: 'Feature Flag Cleanup', requiredSkills: ['BE'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T03', name: 'X-Road Service Migration', requiredSkills: ['BE'], baseEffort: 3, storyPoints: 5, integration: true },
+  { id: 'T04', name: 'REST API Pagination Fix', requiredSkills: ['BE'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T05', name: 'JSON Schema Validation', requiredSkills: ['BE'], baseEffort: 2, storyPoints: 4 },
+  { id: 'T06', name: 'Benefit Payout Logic', requiredSkills: ['BE'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T07', name: 'MQ Topic Refactoring', requiredSkills: ['BE'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T08', name: 'XRoadHelper Timeout', requiredSkills: ['BE'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T09', name: 'MFE Breadcrumb Navigation', requiredSkills: ['FE'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T10', name: 'Background Process Restructure', requiredSkills: ['BE'], baseEffort: 4, storyPoints: 8 },
+  { id: 'T11', name: 'Withholdings Module', requiredSkills: ['BE'], baseEffort: 3, storyPoints: 6 },
+  { id: 'T12', name: 'Decision Template Web Component', requiredSkills: ['FE'], baseEffort: 2, storyPoints: 4 },
+  { id: 'T13', name: 'Query Optimization', requiredSkills: ['DB'], baseEffort: 2, storyPoints: 4 },
+  { id: 'T14', name: 'ORA-00933 Investigation', requiredSkills: ['DB'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T15', name: 'Database Schema Creation', requiredSkills: ['DB'], baseEffort: 2, storyPoints: 4 },
+  { id: 'T16', name: 'Data Exchange Service', requiredSkills: ['DB'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T17', name: 'Portal Form Validation', requiredSkills: ['FE'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T18', name: 'Social Tax Aggregation', requiredSkills: ['DB'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T19', name: 'Pipeline Template Update', requiredSkills: ['DO'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T20', name: 'E2E Test Framework', requiredSkills: ['DO'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T21', name: 'Environment Stabilization', requiredSkills: ['DO'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T22', name: 'SBOM Generation', requiredSkills: ['DO'], baseEffort: 1, storyPoints: 2 },
+  { id: 'T23', name: 'Regression Test Maintenance', requiredSkills: ['DO'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T24', name: 'Stiiliraamat Update', requiredSkills: ['FE'], baseEffort: 2, storyPoints: 3 },
+  { id: 'T25', name: 'Pension Seniority Sync', requiredSkills: ['BE', 'DB'], baseEffort: 4, storyPoints: 8 },
+  { id: 'T26', name: 'Person Data Exchange (RR)', requiredSkills: ['BE', 'DB'], baseEffort: 3, storyPoints: 5, integration: true },
+  { id: 'T27', name: 'Benefit Calculation Engine', requiredSkills: ['BE', 'DB'], baseEffort: 4, storyPoints: 7 },
+  { id: 'T28', name: 'Finance Aggregation', requiredSkills: ['BE', 'DB'], baseEffort: 3, storyPoints: 6 },
+  { id: 'T29', name: 'RINA Facade Enhancement', requiredSkills: ['BE', 'DB'], baseEffort: 3, storyPoints: 5, integration: true },
+  { id: 'T30', name: 'BFF Authentication Pattern', requiredSkills: ['BE', 'FE'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T31', name: 'Universal Proceeding MFE', requiredSkills: ['BE', 'FE'], baseEffort: 3, storyPoints: 6 },
+  { id: 'T32', name: 'STAR-SKAIS Integration', requiredSkills: ['BE', 'DB'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T33', name: 'Spring Boot 3 + Test Suite', requiredSkills: ['BE', 'DO'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T34', name: 'API Autotest Creation', requiredSkills: ['BE', 'DO'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T35', name: 'TOKAT MFE Workflow', requiredSkills: ['BE', 'FE'], baseEffort: 4, storyPoints: 7 },
+  { id: 'T36', name: 'Scheduler Mgmt Service', requiredSkills: ['BE', 'DO'], baseEffort: 3, storyPoints: 6 },
+  { id: 'T37', name: 'Module Federation Setup', requiredSkills: ['DO', 'FE'], baseEffort: 3, storyPoints: 5 },
+  { id: 'T38', name: 'MFE E2E Test Harness', requiredSkills: ['DO', 'FE'], baseEffort: 2, storyPoints: 4 },
+  { id: 'T39', name: 'Liquibase Rollback Safety', requiredSkills: ['DB', 'DO'], baseEffort: 3, storyPoints: 6 },
+  { id: 'T40', name: 'Prod Data Anonymization', requiredSkills: ['DB', 'DO'], baseEffort: 4, storyPoints: 7 },
+];
+
+export const MISFORTUNE_CARDS = [
+  { id: 'M01', name: 'Project Won\'t Compile', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M02', name: 'Dependency Conflict', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M03', name: 'API Contract Changed', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M04', name: 'Hibernate Surprise', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M05', name: 'Merge Conflict', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M06', name: 'Liquibase Checksum Mismatch', category: 'DB', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M07', name: 'ORA-01000: Max Cursors', category: 'DB', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M08', name: 'Missing DB Remarks', category: 'DB', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M09', name: 'Test Data Corruption', category: 'DB', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M10', name: 'GitLab Runner Queue', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M11', name: 'Flaky Test Blocks Pipeline', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M12', name: 'Artifactory Down', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M13', name: 'Unexpected Meeting', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M14', name: 'VPN Drops', category: 'DO', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M15', name: 'Requirements Changed', category: 'BE', severity: 'MAJOR', effectType: 'discard', effectValue: 0 },
+  { id: 'M16', name: 'Circular Dependency Found', category: 'BE', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M17', name: 'Spring Boot Breaking Change', category: 'BE', severity: 'MAJOR', effectType: 'skip_be', effectValue: 0 },
+  { id: 'M18', name: 'Liquibase Moved to HTTPS', category: 'DB', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M19', name: 'ORA-00933 in Production', category: 'DB', severity: 'MAJOR', effectType: 'skip_db', effectValue: 0 },
+  { id: 'M20', name: 'Migration Without Rollback', category: 'DB', severity: 'MAJOR', effectType: 'bug', effectValue: 1 },
+  { id: 'M21', name: 'Pipeline Red on Master', category: 'DO', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M22', name: 'Test Environment Down', category: 'DO', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M23', name: 'GovSSO Token Expired', category: 'DO', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M24', name: 'X-Road Mocks Missing', category: 'BE', severity: 'MAJOR', effectType: 'integration_effort', effectValue: 2 },
+  { id: 'M25', name: 'Production Incident', category: 'DO', severity: 'CATASTROPHIC', effectType: 'skip_bug', effectValue: 1 },
+  { id: 'M26', name: 'Security Vulnerability', category: 'BE', severity: 'CATASTROPHIC', effectType: 'bug', effectValue: 2 },
+  { id: 'M27', name: 'PreLive Bounces Release', category: 'DO', severity: 'CATASTROPHIC', effectType: 'lose_sp', effectValue: 2 },
+  { id: 'M28', name: 'Data Inconsistency Found', category: 'DB', severity: 'CATASTROPHIC', effectType: 'bug', effectValue: 1 },
+  { id: 'M29', name: 'Quiet Day', category: null, severity: 'LUCKY', effectType: 'two_actions', effectValue: 0 },
+  { id: 'M30', name: 'Copy-Paste from Pension', category: null, severity: 'LUCKY', effectType: 'reduce_effort', effectValue: 1 },
+  { id: 'M31', name: 'AI Assistant', category: null, severity: 'LUCKY', effectType: 'instant_complete', effectValue: 0 },
+  { id: 'M32', name: 'Intern Saved the Day', category: null, severity: 'LUCKY', effectType: 'reduce_effort', effectValue: 2 },
+];
+
+export const INTEGRATION_TASK_IDS = TASKS.filter(t => t.integration).map(t => t.id);
+
+export function createGameConfig(overrides = {}) {
+  return {
+    skills: overrides.skills || SKILLS,
+    tasks: overrides.tasks || TASKS,
+    misfortuneCards: overrides.misfortuneCards || MISFORTUNE_CARDS,
+    integrationTaskIds: overrides.integrationTaskIds || INTEGRATION_TASK_IDS,
+    sprintsPerGame: overrides.sprintsPerGame || 4,
+    turnsPerSprint: overrides.turnsPerSprint || 4,
+    reshuffleMisfortune: overrides.reshuffleMisfortune ?? true,
+  };
+}
