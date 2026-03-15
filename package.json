@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:features",
     "test:unit": "node test/unit/run.js",
-    "test:features": "npx cucumber-js --import test/steps/*.js",
+    "test:features": "node node_modules/@cucumber/cucumber/bin/cucumber-js --import 'test/steps/*.js' 'test/features/*.feature'",
     "play": "node src/cli.js"
   },
   "devDependencies": {
