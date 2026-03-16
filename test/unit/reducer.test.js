@@ -282,6 +282,69 @@ test('instant_complete with roll 5-6 adds no bug', () => {
 });
 
 // ═════════════════════════════════════
+console.log('\n── reduce: leader mechanic ──');
+// ═════════════════════════════════════
+
+test('scored task card goes to leader review pile', () => {
+  let s = makeState();
+  // Give player 1 highest SP so they're the leader
+  const players = [...s.players];
+  players[1] = { ...players[1], score: 10 };
+  s = { ...s, players };
+
+  // Advance to SCORE_TASK for player 0
+  s = advanceToScoreTask(s);
+  assert(s.phase.step === 'SCORE_TASK', `setup: expected SCORE_TASK, got ${s.phase.step}`);
+
+  const task = s.players[0].task;
+  const leaderPileBefore = s.players[1].reviewPile.length;
+  s = reduce(s, { type: 'SCORE_TASK', diceRoll: 6 });
+
+  // Task card should be in player 1's (leader) review pile
+  assert(s.players[1].reviewPile.length === leaderPileBefore + 1,
+    `leader pile should grow by 1, got ${s.players[1].reviewPile.length}`);
+  assert(s.players[1].reviewPile[s.players[1].reviewPile.length - 1].id === task.id,
+    'last card in leader pile should be the scored task');
+});
+
+test('leader receives own task card when they score', () => {
+  let s = makeState();
+  // Player 0 is the leader (give highest SP)
+  const players = [...s.players];
+  players[0] = { ...players[0], score: 20 };
+  s = { ...s, players };
+
+  s = advanceToScoreTask(s);
+  const task = s.players[0].task;
+  const pileBefore = s.players[0].reviewPile.length;
+  s = reduce(s, { type: 'SCORE_TASK', diceRoll: 6 });
+
+  // Task card should be in player 0's own review pile (they're the leader)
+  assert(s.players[0].reviewPile.length === pileBefore + 1,
+    `own pile should grow by 1, got ${s.players[0].reviewPile.length}`);
+});
+
+test('leader is determined by highest SP with lowest index tiebreak', () => {
+  let s = makeState();
+  // Players 1 and 2 tied at 20 SP — player 1 (lower index) is leader
+  // Player 0 scoring ~5 SP won't overtake them
+  const players = [...s.players];
+  players[1] = { ...players[1], score: 20 };
+  players[2] = { ...players[2], score: 20 };
+  s = { ...s, players };
+
+  s = advanceToScoreTask(s);
+  const pileBefore1 = s.players[1].reviewPile.length;
+  const pileBefore2 = s.players[2].reviewPile.length;
+  s = reduce(s, { type: 'SCORE_TASK', diceRoll: 6 });
+
+  assert(s.players[1].reviewPile.length === pileBefore1 + 1,
+    `player 1 (leader by tiebreak) should get the card`);
+  assert(s.players[2].reviewPile.length === pileBefore2,
+    `player 2 should not get the card`);
+});
+
+// ═════════════════════════════════════
 console.log('\n── Results ──');
 console.log(`  ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

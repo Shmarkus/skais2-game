@@ -8,11 +8,9 @@ Differences between the physical board game (v3.1) and the current digital engin
 
 **Current engine:** SKILL_UP is instant — one action = one level up. No token pool, no multi-turn redemption.
 
-## 2. Leader Mechanic (review cards)
+## ~~2. Leader Mechanic (review cards)~~ DONE
 
-**Board game:** Player with highest SP is the "leader". When any player completes a task (scores SP), their task card goes to the leader's review pile. Leader accumulates review cards that become bugs at merge freeze if not reviewed.
-
-**Current engine:** `reviewPile` exists on player objects but the "card goes to leader on task completion" logic is not wired in the reducer's `reduceScoreTask`.
+Fixed: `reduceScoreTask` now sends the completed task card to the leader's (highest SP, lowest index tiebreak) review pile. Leader accumulates cards that become bugs at merge freeze if unreviewed.
 
 ## ~~3. LGTM Dice Rolling~~ DONE
 

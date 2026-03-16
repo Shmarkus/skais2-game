@@ -223,7 +223,7 @@ When('misfortune is drawn and resolved', function () {
     // If instant complete, score it
     if (this.state.phase.step === 'SCORE_TASK') {
       this.initialScore = this.state.players[this.state.phase.activePlayer].score;
-      dispatch(this, { type: 'SCORE_TASK' });
+      dispatch(this, { type: 'SCORE_TASK', diceRoll: this.diceRoll || 6 });
     }
     // CHECK_COMPLETION if needed
     if (this.state.phase.step === 'CHECK_COMPLETION') {
@@ -421,15 +421,16 @@ Given('sprint {int} turns are complete', function (sprint) {
 Given('sprint turns are complete', function () {
   ensureState(this);
   playToFreeze(this);
+  // Re-apply pending overrides (e.g. review pile set before auto-advance)
+  applyPendingOverrides(this);
   assert.strictEqual(this.state.phase.step, 'MERGE_FREEZE_UNREVIEWED', `Expected freeze, got ${this.state.phase.step}`);
 });
 
 Given('player {int} has {int} cards in their review pile', function (pi, n) {
   ensureState(this);
   const cards = Array.from({ length: n }, (_, i) => ({ id: `R${i}` }));
-  const players = [...this.state.players];
-  players[pi] = { ...players[pi], reviewPile: cards };
-  this.state = { ...this.state, players };
+  this._pendingPlayerOverrides[pi] = { ...this._pendingPlayerOverrides[pi], reviewPile: cards };
+  applyPlayerOverride(this, pi, { reviewPile: cards });
 });
 
 Given('the team meets delivery target next sprint', function () {

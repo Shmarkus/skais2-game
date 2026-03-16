@@ -368,13 +368,31 @@ function reduceExecuteAction(state, action) {
   return s;
 }
 
+function findLeader(players) {
+  let leaderIdx = 0;
+  for (let i = 1; i < players.length; i++) {
+    if (players[i].score > players[leaderIdx].score) {
+      leaderIdx = i;
+    }
+  }
+  return leaderIdx;
+}
+
 function reduceScoreTask(state, action) {
   const pi = state.phase.activePlayer;
   const player = state.players[pi];
 
   if (player.task) {
-    const scored = scoreTask(player, player.task);
+    const completedTask = player.task;
+    const scored = scoreTask(player, completedTask);
     let s = updatePlayer(state, pi, { score: scored.score, task: null, effort: 0 });
+
+    // Send completed task card to leader's review pile
+    const leaderIdx = findLeader(s.players);
+    const leader = s.players[leaderIdx];
+    s = updatePlayer(s, leaderIdx, {
+      reviewPile: [...leader.reviewPile, completedTask],
+    });
 
     // If instant complete from effect, roll d6: 1-4 = 1 bug (AI quality)
     const effectMeta = state.meta.effectResolution;
@@ -387,7 +405,7 @@ function reduceScoreTask(state, action) {
 
     // Track sprint completions
     const sprintCompleted = (state.meta.sprintCompletedTasks || 0) + 1;
-    s = { ...s, meta: { ...s.meta, scored: true, scoredPoints: player.task.storyPoints, sprintCompletedTasks: sprintCompleted } };
+    s = { ...s, meta: { ...s.meta, scored: true, scoredPoints: completedTask.storyPoints, sprintCompletedTasks: sprintCompleted } };
     s = advanceTurn(s, {}, action);
     return s;
   }
