@@ -201,6 +201,80 @@ When('the game is played through sprint {int}', function (sprint) {
   playGame(e2e, sprint);
 });
 
+When('the game is played to freeze of sprint {int}', function (sprint) {
+  const e2e = initE2E(this);
+  // Play until we reach MERGE_FREEZE_UNREVIEWED for the target sprint
+  let s = e2e.state;
+  let safety = 20000;
+  while (safety-- > 0 && s.phase.game === 'PLAYING') {
+    if (s.phase.step === 'MERGE_FREEZE_UNREVIEWED' && s.phase.sprint >= sprint) break;
+    const step = s.phase.step;
+    if (step === 'AWAITING_ACTION') {
+      const action = pickAction(s, e2e.strategy);
+      if (!action) break;
+      s = reduce(s, action);
+      continue;
+    }
+    if (step === 'MERGE_FREEZE_UNREVIEWED') { s = reduce(s, { type: 'RESOLVE_UNREVIEWED' }); continue; }
+    if (step === 'MERGE_FREEZE_DELIVERY') { s = reduce(s, { type: 'RESOLVE_DELIVERY' }); continue; }
+    if (step === 'MERGE_FREEZE_BONUS') { s = reduce(s, { type: 'RESOLVE_BONUS' }); continue; }
+    if (step === 'MERGE_FREEZE_DANGER') { s = reduce(s, { type: 'RESOLVE_DANGER', diceRoll: e2e.dangerRoll }); continue; }
+    const autoMap = { DRAW_MISFORTUNE:'DRAW_MISFORTUNE', CHECK_IMMUNITY:'CHECK_IMMUNITY',
+      RESOLVE_EFFECT:'RESOLVE_EFFECT', CHECK_COMPLETION:'CHECK_COMPLETION',
+      EXECUTE_ACTION:'EXECUTE_ACTION', SCORE_TASK:'SCORE_TASK', END_TURN:'END_TURN' };
+    const t = autoMap[step];
+    if (!t) break;
+    const ctx = { type: t };
+    if (step === 'CHECK_COMPLETION') ctx.diceRoll = 6;
+    if (step === 'SCORE_TASK') ctx.diceRoll = 6;
+    s = reduce(s, ctx);
+    if (s.meta.rejected) break;
+  }
+  e2e.state = s;
+  assert.strictEqual(s.phase.step, 'MERGE_FREEZE_UNREVIEWED',
+    `Expected MERGE_FREEZE_UNREVIEWED, got ${s.phase.step}`);
+});
+
+When('all player bugs are set to {int}', function (n) {
+  const e2e = initE2E(this);
+  const playerCount = e2e.state.players.length;
+  e2e.state = {
+    ...e2e.state,
+    board: { ...e2e.state.board, playerBugs: new Array(playerCount).fill(n) },
+  };
+  // Record scores before bonus
+  e2e.scoresBeforeBonus = e2e.state.players.map(p => p.score);
+});
+
+When('the freeze is resolved', function () {
+  const e2e = initE2E(this);
+  let s = e2e.state;
+  if (s.phase.step === 'MERGE_FREEZE_UNREVIEWED') s = reduce(s, { type: 'RESOLVE_UNREVIEWED' });
+  if (s.phase.step === 'MERGE_FREEZE_DELIVERY') s = reduce(s, { type: 'RESOLVE_DELIVERY' });
+  if (s.phase.step === 'MERGE_FREEZE_BONUS') s = reduce(s, { type: 'RESOLVE_BONUS' });
+  if (s.phase.step === 'MERGE_FREEZE_DANGER') s = reduce(s, { type: 'RESOLVE_DANGER', diceRoll: e2e.dangerRoll });
+  e2e.state = s;
+});
+
+When('unreviewed and delivery are resolved', function () {
+  const e2e = initE2E(this);
+  let s = e2e.state;
+  if (s.phase.step === 'MERGE_FREEZE_UNREVIEWED') s = reduce(s, { type: 'RESOLVE_UNREVIEWED' });
+  if (s.phase.step === 'MERGE_FREEZE_DELIVERY') s = reduce(s, { type: 'RESOLVE_DELIVERY' });
+  e2e.state = s;
+  assert.strictEqual(s.phase.step, 'MERGE_FREEZE_BONUS',
+    `Expected MERGE_FREEZE_BONUS, got ${s.phase.step}`);
+});
+
+When('sprint bonus is resolved for the current sprint', function () {
+  const e2e = initE2E(this);
+  let s = e2e.state;
+  assert.strictEqual(s.phase.step, 'MERGE_FREEZE_BONUS',
+    `Expected MERGE_FREEZE_BONUS, got ${s.phase.step}`);
+  s = reduce(s, { type: 'RESOLVE_BONUS' });
+  e2e.state = s;
+});
+
 // ── Then Steps ──
 
 Then('the game result should be WON', function () {
@@ -286,4 +360,14 @@ Then('at least one skill should be at max level', function () {
     Object.values(p.skills).some(v => v >= 3)
   );
   assert.ok(hasMax, 'At least one player should have a skill at max level (3)');
+});
+
+Then('all players should have received {int} bonus SP from sprint bonus', function (expectedBonus) {
+  const before = this.e2e.scoresBeforeBonus;
+  assert.ok(before, 'Scores before bonus should have been recorded');
+  for (let i = 0; i < this.e2e.state.players.length; i++) {
+    const gained = this.e2e.state.players[i].score - before[i];
+    assert.strictEqual(gained, expectedBonus,
+      `Player ${i} (${this.e2e.state.players[i].name}) should gain ${expectedBonus} SP from bonus, got ${gained}`);
+  }
 });

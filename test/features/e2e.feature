@@ -64,6 +64,16 @@ Feature: End-to-End Game Scenarios
     When the game is played to completion
     Then more misfortune cards should have been drawn than the initial deck size
 
+  Scenario: Tied zero bugs at sprint end gives shared +1 SP bonus
+    Given a 3-player game with seed 100
+    And the strategy is "always develop"
+    And all danger rolls are safe
+    When the game is played to freeze of sprint 1
+    And unreviewed and delivery are resolved
+    And all player bugs are set to 0
+    And sprint bonus is resolved for the current sprint
+    Then all players should have received 1 bonus SP from sprint bonus
+
   Scenario: Game completes with all skills maxed
     Given a 2-player game with seed 88
     And the strategy is "always skill up"
