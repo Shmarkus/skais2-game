@@ -27,7 +27,7 @@ export function renderBoard(state) {
     const effort = p.task ? String(p.effort).padEnd(6) : '--'.padEnd(6);
     const skills = `BE${p.skills.BE} DB${p.skills.DB} DO${p.skills.DO} FE${p.skills.FE}`;
     const sp = String(p.score).padStart(2);
-    const bugStr = String(p.bugs).padStart(3);
+    const bugStr = String(state.board.playerBugs[i] || 0).padStart(3);
     lines.push(`  ${marker} ${name} ${taskName} ${effort} ${skills.padEnd(13)} ${sp} ${bugStr}`);
   }
 

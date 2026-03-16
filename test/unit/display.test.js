@@ -109,6 +109,16 @@ test('shows board summary with danger zone', () => {
   assert(out.includes('Safe') || out.includes('token'), 'should show danger zone or token count');
 });
 
+test('displays bug count from board.playerBugs, not player.bugs', () => {
+  const s = makeState();
+  // Set board bugs to 5 for Bob (index 1), but player.bugs stays at 1
+  s.board = { ...s.board, playerBugs: [0, 5, 0] };
+  s.players[1] = { ...s.players[1], bugs: 1 }; // stale player.bugs
+  const out = renderBoard(s);
+  const bobLine = out.split('\n').find(l => l.includes('Bob'));
+  assert(bobLine && bobLine.includes('5'), 'should show board bug count (5), not player.bugs (1)');
+});
+
 test('shows no task when player has none', () => {
   const s = makeState();
   s.players[0] = { ...s.players[0], task: null, effort: 0 };
