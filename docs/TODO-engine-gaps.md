@@ -2,11 +2,9 @@
 
 Differences between the physical board game (v3.1) and the current digital engine.
 
-## 1. Skill Up Token Pool (multi-turn mechanic)
+## ~~1. Skill Up Token Pool (multi-turn mechanic)~~ DONE
 
-**Board game:** Skill tokens come in tiers (cost 1/2/3). Pool has `floor(players * 1.5)` of each tier. Must take cheapest available. Tier 2/3 tokens require multiple turns to redeem (mark progress on redemption bar). Can't abandon mid-redemption.
-
-**Current engine:** SKILL_UP is instant — one action = one level up. No token pool, no multi-turn redemption.
+Fixed: Token pool with 3 tiers (`floor(players * 1.5)` each). Must take cheapest available. Tier 1 = instant, tier 2/3 = multi-turn redemption. Mid-redemption forces SKILL_UP only. Skill chosen at final redemption step.
 
 ## ~~2. Leader Mechanic (review cards)~~ DONE
 

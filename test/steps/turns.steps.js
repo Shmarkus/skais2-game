@@ -5,6 +5,7 @@ import { createGameConfig, TASKS, MISFORTUNE_CARDS } from '../../src/config.js';
 import { TurnPhase, SprintPhase, GamePhase } from '../../src/stateMachine.js';
 import { createSequenceRng } from '../../src/rng.js';
 import { addBug, addDissatisfaction, totalBugs, totalTokens } from '../../src/modules/board.js';
+import { getLegalActions } from '../../src/validator.js';
 import { createBoard } from '../../src/modules/board.js';
 
 // ── Shared Setup ──
@@ -68,25 +69,15 @@ function dispatch(world, action) {
 // Pick a valid action for current player to advance their turn
 function pickAction(world) {
   const pi = world.state.phase.activePlayer;
-  const player = world.state.players[pi];
-  // Try skill up
-  for (const skill of ['BE', 'DB', 'DO', 'FE']) {
-    if ((player.skills[skill] || 0) < 3) {
-      return { type: 'SKILL_UP', skill, player: pi };
-    }
+  const legal = getLegalActions(world.state);
+
+  if (legal.length > 0) {
+    // Prefer DEVELOP to advance the game, then anything else
+    const develop = legal.find(a => a.type === 'DEVELOP');
+    if (develop) return develop;
+    return legal[0];
   }
-  // Try develop
-  if (player.task && player.effort > 0) {
-    return { type: 'DEVELOP', player: pi };
-  }
-  // Try pay debt
-  if (totalTokens(world.state.board) > 0) {
-    return { type: 'PAY_DEBT', player: pi };
-  }
-  // Try review actions
-  if (player.reviewPile && player.reviewPile.length > 0) {
-    return { type: 'PROPER_REVIEW', player: pi };
-  }
+
   // Nothing valid — give player a task so they can develop
   const task = TASKS[0];
   const players = [...world.state.players];
@@ -450,6 +441,9 @@ Given('the team survives sprint {int}, {int}, {int}, and {int}', function (s1, s
     } else if (this.state.phase.step === 'MERGE_FREEZE_BONUS') {
       dispatch(this, { type: 'RESOLVE_BONUS' });
     } else if (this.state.phase.step === 'MERGE_FREEZE_DANGER') {
+      // Ensure survival by resetting board tokens before danger check
+      this.state = { ...this.state, board: { playerBugs: new Array(this.state.players.length).fill(0), dissatisfaction: 0 } };
+      this.board = this.state.board;
       dispatch(this, { type: 'RESOLVE_DANGER', diceRoll: 1 });
     } else if (this.state.phase.step === 'AWAITING_ACTION') {
       const action = pickAction(this);

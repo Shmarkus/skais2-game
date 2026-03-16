@@ -151,10 +151,26 @@ export function renderActionMenu(legalActions, state) {
         lines.push(`${num} DEVELOP        effort ${player.effort} → ${player.effort - 1}`);
         break;
       case 'SKILL_UP': {
-        const cur = player.skills[a.skill] || 0;
-        const nxt = cur + 1;
-        const mod = nxt === 1 ? '+0 eff, immune' : nxt === 2 ? '+0 eff, QA auto' : nxt === 3 ? '-1 eff' : '';
-        lines.push(`${num} SKILL UP ${a.skill.padEnd(4)} level ${cur} → ${nxt} (${mod})`);
+        const progress = player.skillUpProgress;
+        if (a.skill) {
+          // Skill variant (tier 1 instant or final redemption step)
+          const cur = player.skills[a.skill] || 0;
+          const nxt = cur + 1;
+          const mod = nxt === 1 ? '+0 eff, immune' : nxt === 2 ? '+0 eff, QA auto' : nxt === 3 ? '-1 eff' : '';
+          if (progress) {
+            lines.push(`${num} SKILL UP ${a.skill.padEnd(4)} level ${cur} → ${nxt} (${mod}) [complete ${progress.progress}/${progress.tier}]`);
+          } else {
+            lines.push(`${num} SKILL UP ${a.skill.padEnd(4)} level ${cur} → ${nxt} (${mod})`);
+          }
+        } else if (progress) {
+          // Continue redemption (no skill choice yet)
+          lines.push(`${num} SKILL UP       continue (${progress.progress}/${progress.tier})`);
+        } else {
+          // Start tier 2/3 redemption (no skill choice)
+          const pool = state.tokenPool || {};
+          const tier = pool.tier2 > 0 ? 2 : 3;
+          lines.push(`${num} SKILL UP       start tier ${tier} (${tier} turns)`);
+        }
         break;
       }
       case 'PAY_DEBT':

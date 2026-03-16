@@ -37,10 +37,11 @@ function makeState(overrides = {}) {
   return {
     phase: { game: 'PLAYING', step: 'AWAITING_ACTION', activePlayer: 0, sprint: 1, turn: 1 },
     players: [
-      { skills: { BE: 0, DB: 0, DO: 0, FE: 0 }, task: { id: 'T01', requiredSkills: ['BE'] }, effort: 3, score: 0, bugs: 0, reviewPile: [] },
-      { skills: { BE: 1, DB: 0, DO: 0, FE: 0 }, task: { id: 'T13', requiredSkills: ['DB'] }, effort: 2, score: 0, bugs: 0, reviewPile: [] },
+      { skills: { BE: 0, DB: 0, DO: 0, FE: 0 }, task: { id: 'T01', requiredSkills: ['BE'] }, effort: 3, score: 0, bugs: 0, reviewPile: [], skillUpProgress: null },
+      { skills: { BE: 1, DB: 0, DO: 0, FE: 0 }, task: { id: 'T13', requiredSkills: ['DB'] }, effort: 2, score: 0, bugs: 0, reviewPile: [], skillUpProgress: null },
     ],
-    board: { bugs: 2, dissatisfaction: 1 },
+    board: { playerBugs: [0, 0], dissatisfaction: 1 },
+    tokenPool: { tier1: 3, tier2: 3, tier3: 3 },
     config: baseConfig,
     ...overrides,
   };

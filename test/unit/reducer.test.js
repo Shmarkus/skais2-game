@@ -3,6 +3,7 @@ import { createGameConfig, TASKS, MISFORTUNE_CARDS } from '../../src/config.js';
 import { TurnPhase, SprintPhase, GamePhase } from '../../src/stateMachine.js';
 import { createSequenceRng, createSeededRng, createDiceSequence, createFixedDeck } from '../../src/rng.js';
 import { addBug, addDissatisfaction } from '../../src/modules/board.js';
+import { getLegalActions } from '../../src/validator.js';
 
 let passed = 0;
 let failed = 0;
@@ -342,6 +343,138 @@ test('leader is determined by highest SP with lowest index tiebreak', () => {
     `player 1 (leader by tiebreak) should get the card`);
   assert(s.players[2].reviewPile.length === pileBefore2,
     `player 2 should not get the card`);
+});
+
+// ═════════════════════════════════════
+console.log('\n── skill token pool ──');
+// ═════════════════════════════════════
+
+test('initial state has token pool with correct counts', () => {
+  const s = makeState(); // 5 players → floor(5 * 1.5) = 7 per tier
+  assert(s.tokenPool !== undefined, 'tokenPool should exist');
+  assert(s.tokenPool.tier1 === 7, `tier1 should be 7, got ${s.tokenPool.tier1}`);
+  assert(s.tokenPool.tier2 === 7, `tier2 should be 7, got ${s.tokenPool.tier2}`);
+  assert(s.tokenPool.tier3 === 7, `tier3 should be 7, got ${s.tokenPool.tier3}`);
+});
+
+test('SKILL_UP with tier 1 available: instant level up, pool decremented', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  const poolBefore = s.tokenPool.tier1;
+
+  s = reduce(s, { type: 'SKILL_UP', skill: 'BE', player: 0 });
+  // After SKILL_UP → EXECUTE_ACTION auto
+  if (s.phase.step === 'EXECUTE_ACTION') {
+    s = reduce(s, { type: 'EXECUTE_ACTION' });
+  }
+
+  assert(s.players[0].skills.BE === 1, `BE should be 1, got ${s.players[0].skills.BE}`);
+  assert(s.tokenPool.tier1 === poolBefore - 1, `tier1 should decrease by 1`);
+  assert(!s.players[0].skillUpProgress, 'no active redemption after instant');
+});
+
+test('SKILL_UP with no tier 1: starts tier 2 redemption', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  // Exhaust tier 1
+  s = { ...s, tokenPool: { ...s.tokenPool, tier1: 0 } };
+
+  s = reduce(s, { type: 'SKILL_UP', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') {
+    s = reduce(s, { type: 'EXECUTE_ACTION' });
+  }
+
+  assert(s.players[0].skillUpProgress !== null, 'should have active redemption');
+  assert(s.players[0].skillUpProgress.tier === 2, `tier should be 2, got ${s.players[0].skillUpProgress.tier}`);
+  assert(s.players[0].skillUpProgress.progress === 1, `progress should be 1`);
+  assert(s.tokenPool.tier2 < 7, 'tier2 pool should decrease');
+});
+
+test('mid-redemption (non-final step): only SKILL_UP continue is legal', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  // Set player mid-redemption on tier 3, step 1 of 3 (2 more to go)
+  const players = [...s.players];
+  players[0] = { ...players[0], skillUpProgress: { tier: 3, progress: 1 } };
+  s = { ...s, players };
+
+  const legal = getLegalActions(s);
+  assert(legal.length === 1, `should have 1 legal action, got ${legal.length}`);
+  assert(legal[0].type === 'SKILL_UP', `should be SKILL_UP, got ${legal[0].type}`);
+  assert(!legal[0].skill, 'should not have skill choice (not final step)');
+});
+
+test('mid-redemption (final step): shows skill variants', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  // Set player on tier 2, step 1 of 2 (final step next)
+  const players = [...s.players];
+  players[0] = { ...players[0], skillUpProgress: { tier: 2, progress: 1 } };
+  s = { ...s, players };
+
+  const legal = getLegalActions(s);
+  assert(legal.length === 4, `should have 4 skill variants, got ${legal.length}`);
+  assert(legal.every(a => a.type === 'SKILL_UP'), 'all should be SKILL_UP');
+  assert(legal.every(a => !!a.skill), 'all should have skill choice');
+});
+
+test('tier 2 completes after 2 SKILL_UP actions, skill chosen on last', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  s = { ...s, tokenPool: { ...s.tokenPool, tier1: 0 } };
+
+  // First SKILL_UP — starts tier 2 redemption (no skill choice)
+  s = reduce(s, { type: 'SKILL_UP', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') s = reduce(s, { type: 'EXECUTE_ACTION' });
+  assert(s.players[0].skillUpProgress.progress === 1, 'progress should be 1');
+
+  // Advance to next AWAITING_ACTION for player 0
+  s = advanceToAwaitingAction(s);
+  // Should still have progress
+  assert(s.players[0].skillUpProgress !== null, 'should still have redemption');
+
+  // Second SKILL_UP — completes, choose BE
+  s = reduce(s, { type: 'SKILL_UP', skill: 'BE', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') s = reduce(s, { type: 'EXECUTE_ACTION' });
+
+  assert(s.players[0].skills.BE === 1, `BE should be 1, got ${s.players[0].skills.BE}`);
+  assert(s.players[0].skillUpProgress === null, 'redemption should be cleared');
+});
+
+test('tier 3 requires 3 actions', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  // Exhaust tier 1 and tier 2
+  s = { ...s, tokenPool: { tier1: 0, tier2: 0, tier3: 7 } };
+
+  // Action 1
+  s = reduce(s, { type: 'SKILL_UP', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') s = reduce(s, { type: 'EXECUTE_ACTION' });
+  assert(s.players[0].skillUpProgress.progress === 1, 'progress 1');
+  assert(s.players[0].skillUpProgress.tier === 3, 'tier 3');
+
+  // Action 2
+  s = advanceToAwaitingAction(s);
+  s = reduce(s, { type: 'SKILL_UP', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') s = reduce(s, { type: 'EXECUTE_ACTION' });
+  assert(s.players[0].skillUpProgress.progress === 2, 'progress 2');
+
+  // Action 3 — completes
+  s = advanceToAwaitingAction(s);
+  s = reduce(s, { type: 'SKILL_UP', skill: 'DB', player: 0 });
+  if (s.phase.step === 'EXECUTE_ACTION') s = reduce(s, { type: 'EXECUTE_ACTION' });
+  assert(s.players[0].skills.DB === 1, `DB should be 1, got ${s.players[0].skills.DB}`);
+  assert(s.players[0].skillUpProgress === null, 'redemption cleared');
+});
+
+test('empty pool prevents SKILL_UP', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  s = { ...s, tokenPool: { tier1: 0, tier2: 0, tier3: 0 } };
+
+  const legal = getLegalActions(s);
+  const hasSkillUp = legal.some(a => a.type === 'SKILL_UP');
+  assert(!hasSkillUp, 'SKILL_UP should not be legal with empty pool');
 });
 
 // ═════════════════════════════════════

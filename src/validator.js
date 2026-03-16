@@ -71,12 +71,36 @@ export function validateActionPreconditions(state, action) {
       return ok();
 
     case 'SKILL_UP': {
-      const skill = action.skill;
-      if (!skill) return fail('No skill specified');
-      const skillDef = state.config.skills.find(s => s.id === skill);
-      if (!skillDef) return fail(`Unknown skill: ${skill}`);
-      const currentLevel = player.skills[skill] || 0;
-      if (currentLevel >= skillDef.maxLevel) return fail(`${skill} already at max level ${skillDef.maxLevel}`);
+      const progress = player.skillUpProgress;
+      if (progress) {
+        // Mid-redemption: continue (no skill choice needed unless final step)
+        const isFinalStep = progress.progress + 1 >= progress.tier;
+        if (isFinalStep) {
+          // Final step needs a skill
+          const skill = action.skill;
+          if (!skill) return fail('No skill specified for final redemption step');
+          const skillDef = state.config.skills.find(s => s.id === skill);
+          if (!skillDef) return fail(`Unknown skill: ${skill}`);
+          const currentLevel = player.skills[skill] || 0;
+          if (currentLevel >= skillDef.maxLevel) return fail(`${skill} already at max level ${skillDef.maxLevel}`);
+        }
+        return ok();
+      }
+      // New redemption: need tokens in pool
+      const pool = state.tokenPool;
+      if (!pool || (pool.tier1 <= 0 && pool.tier2 <= 0 && pool.tier3 <= 0)) {
+        return fail('No skill tokens available in pool');
+      }
+      // Tier 1 is instant — needs skill choice now
+      if (pool.tier1 > 0) {
+        const skill = action.skill;
+        if (!skill) return fail('No skill specified');
+        const skillDef = state.config.skills.find(s => s.id === skill);
+        if (!skillDef) return fail(`Unknown skill: ${skill}`);
+        const currentLevel = player.skills[skill] || 0;
+        if (currentLevel >= skillDef.maxLevel) return fail(`${skill} already at max level ${skillDef.maxLevel}`);
+      }
+      // Tier 2/3: no skill needed yet (chosen at end)
       return ok();
     }
 
@@ -128,20 +152,51 @@ export function getLegalActions(state) {
   if (state.phase.game !== 'PLAYING') return [];
   if (state.phase.step !== 'AWAITING_ACTION') return [];
 
+  const pi = state.phase.activePlayer;
+  const player = state.players[pi];
+
+  // Mid-redemption: only SKILL_UP is allowed
+  if (player.skillUpProgress) {
+    const progress = player.skillUpProgress;
+    const isFinalStep = progress.progress + 1 >= progress.tier;
+    if (isFinalStep) {
+      // Final step: show skill variants
+      const legal = [];
+      for (const skill of state.config.skills) {
+        const action = { type: 'SKILL_UP', skill: skill.id, player: pi };
+        if (validateActionPreconditions(state, action).valid) {
+          legal.push(action);
+        }
+      }
+      return legal;
+    }
+    // Non-final: just one SKILL_UP (continue) option
+    return [{ type: 'SKILL_UP', player: pi }];
+  }
+
   const candidates = ['DEVELOP', 'SKILL_UP', 'PAY_DEBT', 'PROPER_REVIEW', 'LGTM'];
   const legal = [];
 
   for (const type of candidates) {
     if (type === 'SKILL_UP') {
-      // Check each skill separately
-      for (const skill of state.config.skills) {
-        const action = { type: 'SKILL_UP', skill: skill.id, player: state.phase.activePlayer };
-        if (validateActionPreconditions(state, action).valid) {
-          legal.push(action);
+      const pool = state.tokenPool;
+      if (!pool || (pool.tier1 <= 0 && pool.tier2 <= 0 && pool.tier3 <= 0)) {
+        continue; // No tokens available
+      }
+      if (pool.tier1 > 0) {
+        // Tier 1 instant: show skill variants
+        for (const skill of state.config.skills) {
+          const action = { type: 'SKILL_UP', skill: skill.id, player: pi };
+          if (validateActionPreconditions(state, action).valid) {
+            legal.push(action);
+          }
         }
+      } else {
+        // Tier 2/3: one generic SKILL_UP (skill chosen at end)
+        legal.push({ type: 'SKILL_UP', player: pi });
       }
     } else {
-      const action = { type, player: state.phase.activePlayer };
+      const action = { type, player: pi };
       if (validateActionPreconditions(state, action).valid) {
         legal.push(action);
       }

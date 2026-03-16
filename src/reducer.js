@@ -29,7 +29,12 @@ export function createInitialState(playerNames, configOverrides = {}, rng = Math
     score: 0,
     bugs: 0,
     reviewPile: [],
+    skillUpProgress: null, // { tier, progress } when mid-redemption
   }));
+
+  // Skill token pool: floor(players * 1.5) per tier
+  const tokensPerTier = Math.floor(playerCount * 1.5);
+  const tokenPool = { tier1: tokensPerTier, tier2: tokensPerTier, tier3: tokensPerTier };
 
   const taskDeck = createDeck(config.tasks, rng);
   const misfortuneDeck = createDeck(config.misfortuneCards, rng);
@@ -65,6 +70,7 @@ export function createInitialState(playerNames, configOverrides = {}, rng = Math
       misfortune: misfortuneDeck,
       misfortuneTemplate: [...config.misfortuneCards],
     },
+    tokenPool,
     meta: {},
     _gsm: gsm,
   };
@@ -315,8 +321,38 @@ function reduceExecuteAction(state, action) {
       break;
     }
     case 'SKILL_UP': {
-      const newSkills = levelUp(player.skills, pending.skill);
-      s = updatePlayer(s, pi, { skills: newSkills });
+      const progress = player.skillUpProgress;
+      if (progress) {
+        // Continue existing redemption
+        const newProgress = progress.progress + 1;
+        if (newProgress >= progress.tier) {
+          // Completed — level up the chosen skill
+          const newSkills = levelUp(player.skills, pending.skill);
+          s = updatePlayer(s, pi, { skills: newSkills, skillUpProgress: null });
+        } else {
+          // Still in progress
+          s = updatePlayer(s, pi, {
+            skillUpProgress: { tier: progress.tier, progress: newProgress },
+          });
+        }
+      } else {
+        // Start new redemption — take cheapest available token
+        const pool = s.tokenPool;
+        if (pool.tier1 > 0) {
+          // Tier 1 = instant
+          const newSkills = levelUp(player.skills, pending.skill);
+          s = updatePlayer(s, pi, { skills: newSkills, skillUpProgress: null });
+          s = { ...s, tokenPool: { ...pool, tier1: pool.tier1 - 1 } };
+        } else if (pool.tier2 > 0) {
+          // Tier 2 = start 2-step redemption
+          s = updatePlayer(s, pi, { skillUpProgress: { tier: 2, progress: 1 } });
+          s = { ...s, tokenPool: { ...pool, tier2: pool.tier2 - 1 } };
+        } else if (pool.tier3 > 0) {
+          // Tier 3 = start 3-step redemption
+          s = updatePlayer(s, pi, { skillUpProgress: { tier: 3, progress: 1 } });
+          s = { ...s, tokenPool: { ...pool, tier3: pool.tier3 - 1 } };
+        }
+      }
       break;
     }
     case 'PAY_DEBT': {
