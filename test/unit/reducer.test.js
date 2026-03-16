@@ -163,6 +163,125 @@ test('scoring awards story points and clears task', () => {
 });
 
 // ═════════════════════════════════════
+console.log('\n── reduce: LGTM dice rolling ──');
+// ═════════════════════════════════════
+
+// Helper: advance state to AWAITING_ACTION for player 0
+function advanceToAwaitingAction(s) {
+  let safety = 100;
+  while (safety-- > 0 && s.phase.game === 'PLAYING') {
+    if (s.phase.step === 'AWAITING_ACTION' && s.phase.activePlayer === 0) return s;
+    if (s.phase.step === 'AWAITING_ACTION') {
+      s = reduce(s, { type: 'DEVELOP', player: s.phase.activePlayer });
+    }
+    const auto = { DRAW_MISFORTUNE: 'DRAW_MISFORTUNE', CHECK_IMMUNITY: 'CHECK_IMMUNITY',
+      RESOLVE_EFFECT: 'RESOLVE_EFFECT', CHECK_COMPLETION: 'CHECK_COMPLETION',
+      EXECUTE_ACTION: 'EXECUTE_ACTION', SCORE_TASK: 'SCORE_TASK', END_TURN: 'END_TURN' };
+    const t = auto[s.phase.step];
+    if (!t) break;
+    s = reduce(s, { type: t, diceRoll: 6 });
+    if (s.meta.rejected) break;
+  }
+  return s;
+}
+
+// Helper: advance to SCORE_TASK for player 0 (draw → immune → instant complete path)
+function advanceToScoreTask(s) {
+  // Draw misfortune
+  s = reduce(s, { type: 'DRAW_MISFORTUNE' });
+  // Force the drawn card to instant_complete (M31)
+  s = { ...s, meta: { ...s.meta, lastDrawn: { ...MISFORTUNE_CARDS[30], effectType: 'instant_complete' } } };
+  s = reduce(s, { type: 'CHECK_IMMUNITY' });
+  // Now at RESOLVE_EFFECT (lucky cards aren't immune)
+  s = reduce(s, { type: 'RESOLVE_EFFECT' });
+  // Should be at SCORE_TASK
+  return s;
+}
+
+test('LGTM rolls dice per card: 1-2 = bug, 3-6 = no bug', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  assert(s.phase.step === 'AWAITING_ACTION', `setup: expected AWAITING_ACTION, got ${s.phase.step}`);
+
+  // Give player 0 review cards
+  const players = [...s.players];
+  players[0] = { ...players[0], reviewPile: [{ id: 'R1' }, { id: 'R2' }, { id: 'R3' }] };
+  s = { ...s, players };
+
+  // Choose LGTM → EXECUTE_ACTION
+  s = reduce(s, { type: 'LGTM', player: 0 });
+  assert(s.phase.step === 'EXECUTE_ACTION', `should be EXECUTE_ACTION, got ${s.phase.step}`);
+
+  // Execute with dice: roll 1 (bug), roll 3 (no bug), roll 2 (bug) → 2 bugs
+  const bugsBefore = s.board.playerBugs[0];
+  s = reduce(s, { type: 'EXECUTE_ACTION', lgtmRolls: [1, 3, 2] });
+
+  assert(s.players[0].reviewPile.length === 0, 'review pile should be empty');
+  assert(s.board.playerBugs[0] === bugsBefore + 2, `expected ${bugsBefore + 2} bugs, got ${s.board.playerBugs[0]}`);
+});
+
+test('LGTM with all rolls > 2 adds no bugs', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  const players = [...s.players];
+  players[0] = { ...players[0], reviewPile: [{ id: 'R1' }, { id: 'R2' }] };
+  s = { ...s, players };
+
+  s = reduce(s, { type: 'LGTM', player: 0 });
+  const bugsBefore = s.board.playerBugs[0];
+  s = reduce(s, { type: 'EXECUTE_ACTION', lgtmRolls: [3, 6] });
+  assert(s.board.playerBugs[0] === bugsBefore, `expected ${bugsBefore} bugs, got ${s.board.playerBugs[0]}`);
+});
+
+test('LGTM with all rolls <= 2 adds bug per card', () => {
+  let s = makeState();
+  s = advanceToAwaitingAction(s);
+  const players = [...s.players];
+  players[0] = { ...players[0], reviewPile: [{ id: 'R1' }, { id: 'R2' }] };
+  s = { ...s, players };
+
+  s = reduce(s, { type: 'LGTM', player: 0 });
+  const bugsBefore = s.board.playerBugs[0];
+  s = reduce(s, { type: 'EXECUTE_ACTION', lgtmRolls: [1, 2] });
+  assert(s.board.playerBugs[0] === bugsBefore + 2, `expected ${bugsBefore + 2} bugs, got ${s.board.playerBugs[0]}`);
+});
+
+// ═════════════════════════════════════
+console.log('\n── reduce: sprint task counter ──');
+// ═════════════════════════════════════
+
+test('scoring a task increments sprintCompletedTasks', () => {
+  let s = makeState();
+  s = advanceToScoreTask(s);
+  assert(s.phase.step === 'SCORE_TASK', `setup: expected SCORE_TASK, got ${s.phase.step}`);
+  const before = s.meta.sprintCompletedTasks || 0;
+  s = reduce(s, { type: 'SCORE_TASK' });
+  assert(s.meta.sprintCompletedTasks === before + 1, `expected ${before + 1}, got ${s.meta.sprintCompletedTasks}`);
+});
+
+// ═════════════════════════════════════
+console.log('\n── reduce: AI Assistant (M31) dice roll ──');
+// ═════════════════════════════════════
+
+test('instant_complete with roll 1-4 adds bug', () => {
+  let s = makeState();
+  s = advanceToScoreTask(s);
+  assert(s.phase.step === 'SCORE_TASK', `setup: expected SCORE_TASK, got ${s.phase.step}`);
+  const bugsBefore = s.board.playerBugs[0];
+  s = reduce(s, { type: 'SCORE_TASK', diceRoll: 3 });
+  assert(s.board.playerBugs[0] === bugsBefore + 1, `expected ${bugsBefore + 1} bug, got ${s.board.playerBugs[0]}`);
+});
+
+test('instant_complete with roll 5-6 adds no bug', () => {
+  let s = makeState();
+  s = advanceToScoreTask(s);
+  assert(s.phase.step === 'SCORE_TASK', `setup: expected SCORE_TASK, got ${s.phase.step}`);
+  const bugsBefore = s.board.playerBugs[0];
+  s = reduce(s, { type: 'SCORE_TASK', diceRoll: 5 });
+  assert(s.board.playerBugs[0] === bugsBefore, `expected ${bugsBefore} bugs, got ${s.board.playerBugs[0]}`);
+});
+
+// ═════════════════════════════════════
 console.log('\n── Results ──');
 console.log(`  ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

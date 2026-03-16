@@ -346,9 +346,16 @@ function reduceExecuteAction(state, action) {
     }
     case 'LGTM': {
       const pileSize = player.reviewPile.length;
+      const rolls = action.lgtmRolls || [];
+      const rng = action.rng || Math.random;
       let board = s.board;
+      let bugsAdded = 0;
       for (let i = 0; i < pileSize; i++) {
-        board = addBug(board, pi);
+        const roll = rolls[i] ?? Math.ceil(rng() * 6);
+        if (roll <= 2) {
+          board = addBug(board, pi);
+          bugsAdded++;
+        }
       }
       s = updatePlayer(s, pi, { reviewPile: [] });
       s = { ...s, board };
@@ -369,13 +376,18 @@ function reduceScoreTask(state, action) {
     const scored = scoreTask(player, player.task);
     let s = updatePlayer(state, pi, { score: scored.score, task: null, effort: 0 });
 
-    // If instant complete from effect, add 1 bug (AI quality)
+    // If instant complete from effect, roll d6: 1-4 = 1 bug (AI quality)
     const effectMeta = state.meta.effectResolution;
     if (effectMeta && effectMeta.type === 'instant_complete') {
-      s = { ...s, board: addBug(s.board, pi) };
+      const roll = action.diceRoll ?? Math.ceil((action.rng || Math.random)() * 6);
+      if (roll <= 4) {
+        s = { ...s, board: addBug(s.board, pi) };
+      }
     }
 
-    s = { ...s, meta: { ...s.meta, scored: true, scoredPoints: player.task.storyPoints } };
+    // Track sprint completions
+    const sprintCompleted = (state.meta.sprintCompletedTasks || 0) + 1;
+    s = { ...s, meta: { ...s.meta, scored: true, scoredPoints: player.task.storyPoints, sprintCompletedTasks: sprintCompleted } };
     s = advanceTurn(s, {}, action);
     return s;
   }
@@ -413,7 +425,7 @@ function reduceUnreviewed(state, action) {
 }
 
 function reduceDelivery(state, action) {
-  const completedTasks = action.completedTasks ?? state.players.filter(p => !p.task).length;
+  const completedTasks = action.completedTasks ?? state.meta.sprintCompletedTasks ?? 0;
   const result = deliveryCheck(completedTasks, state.players.length);
 
   let s = state;
@@ -454,6 +466,8 @@ function reduceDanger(state, action) {
     state._gsm.phase = GamePhase.GAME_OVER;
   } else if (state._gsm.sprintMachine.isComplete()) {
     state._gsm.advanceSprint();
+    // Reset sprint task counter for new sprint
+    s = { ...s, meta: { ...s.meta, sprintCompletedTasks: 0 } };
   }
 
   s = syncPhase(s);

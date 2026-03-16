@@ -14,20 +14,14 @@ Differences between the physical board game (v3.1) and the current digital engin
 
 **Current engine:** `reviewPile` exists on player objects but the "card goes to leader on task completion" logic is not wired in the reducer's `reduceScoreTask`.
 
-## 3. LGTM Dice Rolling
+## ~~3. LGTM Dice Rolling~~ DONE
 
-**Board game:** LGTM clears all review cards. Roll d6 per card: 1-2 = 1 bug per card.
+Fixed: LGTM now rolls d6 per card, 1-2 = bug.
 
-**Current engine:** LGTM adds bugs for ALL cards unconditionally (no dice roll, worst case always).
+## ~~4. Sprint Task Counter~~ DONE
 
-## 4. Sprint Task Counter
+Fixed: `meta.sprintCompletedTasks` tracks completions per sprint. `reduceDelivery` uses it. Counter resets on sprint advance.
 
-**Board game:** Board tracks how many tasks the team completed this sprint (for delivery target check).
+## ~~5. AI Assistant (M31) Dice Roll for Bug~~ DONE
 
-**Current engine:** `reduceDelivery` uses `action.completedTasks` or counts players without tasks as a proxy. No explicit sprint completion counter is maintained across the sprint.
-
-## 5. AI Assistant (M31) Dice Roll for Bug
-
-**Board game:** M31 "AI Assistant" completes task instantly, then roll d6: 1-4 = 1 bug.
-
-**Current engine:** Always adds 1 bug unconditionally on instant_complete (no dice roll).
+Fixed: instant_complete now rolls d6 via `action.diceRoll`, 1-4 = bug, 5-6 = no bug.
