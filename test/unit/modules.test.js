@@ -301,6 +301,15 @@ test('registerEffect: extend with custom effect', () => {
   assert(result.meta.type === 'coffee', 'custom effect works');
 });
 
+test('grant_sp: adds SP directly to player', () => {
+  const player = { score: 5 };
+  const card = { effectType: 'grant_sp', effectValue: 2 };
+  const result = resolveEffect(player, {}, card, {});
+  assert(result.playerPatch && result.playerPatch.score === 7, 'score should be 5+2=7');
+  assert(result.meta.type === 'grant_sp', 'meta type should be grant_sp');
+  assert(result.meta.amount === 2, 'meta amount should be 2');
+});
+
 test('unknown effect throws', () => {
   let threw = false;
   try { resolveEffect({}, {}, { effectType: 'nonexistent' }, {}); }

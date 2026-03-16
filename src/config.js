@@ -100,6 +100,17 @@ export const MISFORTUNE_CARDS = [
   { id: 'M30', name: 'Copy-Paste from Pension', category: null, severity: 'LUCKY', effectType: 'reduce_effort', effectValue: 1 },
   { id: 'M31', name: 'AI Assistant', category: null, severity: 'LUCKY', effectType: 'instant_complete', effectValue: 0 },
   { id: 'M32', name: 'Intern Saved the Day', category: null, severity: 'LUCKY', effectType: 'reduce_effort', effectValue: 2 },
+  // ── Expansion Pack (10 cards) ──
+  { id: 'M33', name: 'BFF Gateway Timeout', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M34', name: 'DTO Version Explosion', category: 'BE', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M35', name: 'Liquibase Context Leak', category: 'DB', severity: 'MINOR', effectType: 'effort', effectValue: 1 },
+  { id: 'M36', name: 'Module Federation Cache', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M37', name: 'Chrome DevTools Freeze', category: 'DO', severity: 'MINOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M38', name: 'Shared Library Breaking Change', category: 'BE', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M39', name: 'Pod OOMKilled', category: 'DO', severity: 'MAJOR', effectType: 'skip', effectValue: 0 },
+  { id: 'M40', name: 'TEHIK Security Scan Blocks Deploy', category: 'DO', severity: 'CATASTROPHIC', effectType: 'skip_bug', effectValue: 1 },
+  { id: 'M41', name: 'Hackathon Breakthrough', category: null, severity: 'LUCKY', effectType: 'reduce_effort', effectValue: 2 },
+  { id: 'M42', name: 'Client Praises Sprint Demo', category: null, severity: 'LUCKY', effectType: 'grant_sp', effectValue: 2 },
 ];
 
 export const INTEGRATION_TASK_IDS = TASKS.filter(t => t.integration).map(t => t.id);

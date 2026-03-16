@@ -29,6 +29,7 @@ Given('the board has {int} dissatisfaction tokens', function (n) {
 Given('the board has {int} total tokens', function (n) {
   if (!this.board) this.board = createBoard(this.playerCount);
   this.board = addDissatisfaction(this.board, n);
+  this._pendingBoardOverride = this.board;
 });
 
 Given('the board total is {int} tokens', function (n) {

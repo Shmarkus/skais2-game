@@ -10,9 +10,9 @@ Feature: Deck Management
     Given the task deck
     Then it should contain 40 cards
 
-  Scenario: Misfortune deck contains 32 cards
+  Scenario: Misfortune deck contains 42 cards
     Given the misfortune deck
-    Then it should contain 32 cards
+    Then it should contain 42 cards
 
   Scenario: Drawing depletes the deck
     Given a deck with 3 cards

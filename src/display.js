@@ -77,6 +77,7 @@ export function renderPhaseResult(state, phaseType) {
         case 'lose_sp': return `  Effect: -${eff.amount} SP`;
         case 'two_actions': return `  Effect: lucky! Two actions this turn`;
         case 'instant_complete': return `  Effect: lucky! Task completed instantly`;
+        case 'grant_sp': return `  Effect: lucky! +${eff.amount} SP directly`;
         case 'no_effect': return `  Effect: no effect (${eff.reason})`;
         default: return `  Effect: ${eff.type}`;
       }
@@ -127,6 +128,7 @@ function describeEffect(card) {
     case 'reduce_effort': return `-${card.effectValue} effort`;
     case 'instant_complete': return 'instant complete';
     case 'integration_effort': return `+${card.effectValue} effort (integration)`;
+    case 'grant_sp': return `+${card.effectValue} SP`;
     default: return card.effectType;
   }
 }

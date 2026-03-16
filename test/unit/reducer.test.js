@@ -1,7 +1,7 @@
 import { createInitialState, reduce, reduceUntilInput } from '../../src/reducer.js';
 import { createGameConfig, TASKS, MISFORTUNE_CARDS } from '../../src/config.js';
 import { TurnPhase, SprintPhase, GamePhase } from '../../src/stateMachine.js';
-import { createSequenceRng, createDiceSequence, createFixedDeck } from '../../src/rng.js';
+import { createSequenceRng, createSeededRng, createDiceSequence, createFixedDeck } from '../../src/rng.js';
 import { addBug, addDissatisfaction } from '../../src/modules/board.js';
 
 let passed = 0;
@@ -25,14 +25,7 @@ function makeState(overrides = {}) {
   const state = createInitialState(
     ['Alice', 'Bob', 'Carol', 'Dave', 'Eve'],
     {},
-    createSequenceRng([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.01,
-                        0.1, 0.2, 0.3, 0.4, 0.5]),
+    createSeededRng(42),
   );
   return { ...state, ...overrides };
 }

@@ -44,10 +44,10 @@ function applyPendingOverrides(world) {
     applyPlayerOverride(world, parseInt(pi), patch);
   }
   if (world._pendingBoardOverride) {
+    world.board = world._pendingBoardOverride;
     world.state = { ...world.state, board: world._pendingBoardOverride };
-  }
-  // Also sync board from board.steps.js
-  if (world.board) {
+  } else if (world.board) {
+    // Also sync board from board.steps.js
     world.state = { ...world.state, board: world.board };
   }
 }

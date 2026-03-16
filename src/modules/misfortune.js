@@ -90,6 +90,13 @@ const effectHandlers = {
     };
   },
 
+  grant_sp(player, board, card, context) {
+    return {
+      playerPatch: { score: player.score + card.effectValue },
+      meta: { type: 'grant_sp', amount: card.effectValue },
+    };
+  },
+
   integration_effort(player, board, card, context) {
     const integrationTasks = context.integrationTaskIds || [];
     if (player.task && integrationTasks.includes(player.task.id)) {

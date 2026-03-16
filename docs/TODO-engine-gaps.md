@@ -25,3 +25,9 @@ Differences between the physical board game (v3.1) and the current digital engin
 **Board game:** Board tracks how many tasks the team completed this sprint (for delivery target check).
 
 **Current engine:** `reduceDelivery` uses `action.completedTasks` or counts players without tasks as a proxy. No explicit sprint completion counter is maintained across the sprint.
+
+## 5. AI Assistant (M31) Dice Roll for Bug
+
+**Board game:** M31 "AI Assistant" completes task instantly, then roll d6: 1-4 = 1 bug.
+
+**Current engine:** Always adds 1 bug unconditionally on instant_complete (no dice roll).
