@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { writeFileSync, mkdirSync } from 'fs';
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const tests = ['stateMachine.test.js', 'validator.test.js', 'skills.test.js', 'modules.test.js', 'reducer.test.js'];
+const tests = ['stateMachine.test.js', 'validator.test.js', 'skills.test.js', 'modules.test.js', 'reducer.test.js', 'display.test.js', 'cli.test.js'];
 
 let allPassed = true;
 const suiteResults = [];

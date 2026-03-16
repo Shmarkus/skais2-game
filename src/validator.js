@@ -81,7 +81,8 @@ export function validateActionPreconditions(state, action) {
     }
 
     case 'PAY_DEBT': {
-      const totalTokens = state.board.bugs + state.board.dissatisfaction;
+      const bugCount = (state.board.playerBugs || []).reduce((sum, b) => sum + b, 0);
+      const totalTokens = bugCount + (state.board.dissatisfaction || 0);
       if (totalTokens <= 0) return fail('No tokens on the board to remove');
       return ok();
     }
